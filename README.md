@@ -28,7 +28,7 @@ require the dependencies above.
 | `fraud_labels.csv` | Investigation and confirmed-fraud records |
 | `vehicles.csv` | Vehicle and policyholder vehicle attributes |
 | `policyholders.csv` | Policyholder demographic and policy attributes |
-| `geographic_risk.csv` | Postal-code crime, weather, and historical fraud risk |
+| `geographic_risks.csv` | Postal-code crime, weather, and historical fraud risk |
 | `config.json` | Fraud thresholds, deployment values, and domain settings |
 
 The Milestone 3 script imports the included Milestone 1 and Milestone 2
