@@ -22,6 +22,8 @@ require the dependencies above.
 | File | Purpose |
 | --- | --- |
 | `khetha_ensemble_optimizer.py` | Ensemble models, searches, and nested CV |
+| `khetha_data_pipeline.py` | Milestone 1 leakage checks and stratified splitting |
+| `khetha_baseline_models.py` | Milestone 2 preprocessing and baseline model utilities |
 | `claims_data.csv` | Claim-level features and `fraud_label` target |
 | `fraud_labels.csv` | Investigation and confirmed-fraud records |
 | `vehicles.csv` | Vehicle and policyholder vehicle attributes |
@@ -29,8 +31,17 @@ require the dependencies above.
 | `geographic_risk.csv` | Postal-code crime, weather, and historical fraud risk |
 | `config.json` | Fraud thresholds, deployment values, and domain settings |
 
-When the Milestone 1 and Milestone 2 modules are present in the repository,
-the optimizer discovers them through optional imports:
+The Milestone 3 script imports the included Milestone 1 and Milestone 2
+modules and uses their outputs through this preparation path:
+
+1. `KhethaDataPipeline.run("fraud_label", ...)` removes identifiers, dates,
+	target proxies, and other leakage columns before creating a stratified
+	train/test split.
+2. Milestone 2's `_make_preprocessor()` fits categorical encoding on the
+	training partition and transforms the holdout without refitting.
+3. The encoded matrices and labels are passed to `KhethaEnsembleOptimizer`.
+
+The import helper is also available for inspection:
 
 ```python
 from khetha_ensemble_optimizer import _import_milestone_outputs
@@ -38,9 +49,8 @@ from khetha_ensemble_optimizer import _import_milestone_outputs
 milestone_modules = _import_milestone_outputs()
 ```
 
-The optimizer itself accepts the prepared feature matrices and labels from
-those earlier stages, so it remains usable with any compatible NumPy array,
-pandas DataFrame, or pandas Series.
+The optimizer also accepts any compatible NumPy array, sparse matrix, pandas
+DataFrame, or pandas Series when used programmatically.
 
 ## Running the Script
 
@@ -50,10 +60,11 @@ Run the required entry point from the repository root:
 python khetha_ensemble_optimizer.py
 ```
 
-The demonstration loads numeric claim features, uses `fraud_label` as the
-target, builds a Random Forest, and reports a three-fold nested-CV estimate.
-For a full project run, prepare features using the Milestone 1 pipeline and
-pass the resulting train/test partitions to `KhethaEnsembleOptimizer`.
+The demonstration runs the integrated Milestone 1/2 preparation path and then
+uses bounded settings to demonstrate bias/variance diagnosis, staged Gradient
+Boosting validation, AdaBoost weight tracking, Grid Search, Randomized Search,
+Optuna Bayesian optimisation, and three-fold nested CV. The final holdout is
+not used by any of these operations.
 
 ## Basic Usage
 
@@ -115,8 +126,8 @@ training data, and returns:
 `run_randomized_search(param_distributions=None, n_iter=50, cv=5)` uses
 `RandomizedSearchCV`. Default distributions use `scipy.stats.randint` for
 tree counts and `scipy.stats.loguniform` for Gradient Boosting learning
-rates. The sampled mean validation scores are available as
-`convergence_trajectory`.
+rates. The cumulative best sampled mean validation score after each candidate
+is available as `convergence_trajectory`.
 
 ### Bayesian optimisation
 
